@@ -1,3 +1,4 @@
+// app/build.gradle.kts
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -69,26 +70,23 @@ dependencies {
     // Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.5.8")
 
-    // LiveData Compose (si besoin pour l'intégration API future)
+    // LiveData Compose
     implementation("androidx.compose.runtime:runtime-livedata:1.5.8")
 
-    // Pour les futures intégrations réseau (à utiliser par votre collègue)
+    // Networking - Retrofit & OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.google.code.gson:gson:2.10.1")
 
-    // Pour GraphQL (à utiliser par votre collègue)
-    implementation("com.apollographql.apollo3:apollo-runtime:3.8.2")
-    implementation("com.apollographql.apollo3:apollo-api:3.8.2")
+    // Image loading - Coil
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // DataStore (pour les préférences)
+    // DataStore pour les préférences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-
-    // Pour les images (si besoin futur)
-    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Tests
     testImplementation(libs.junit)
