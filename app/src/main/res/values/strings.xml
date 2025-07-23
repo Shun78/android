@@ -1,0 +1,105 @@
+<resources>
+    <!-- Nom de l'application -->
+    <string name="app_name">EcoDeli</string>
+
+    <!-- Navigation -->
+    <string name="nav_deliveries">Livraisons</string>
+    <string name="nav_services">Prestations</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- Écran des livraisons -->
+    <string name="deliveries_title">Mes Livraisons</string>
+    <string name="delivery_status_in_progress">En cours</string>
+    <string name="delivery_status_delivered">Livrée</string>
+    <string name="delivery_status_pending">En attente</string>
+    <string name="delivery_status_cancelled">Annulée</string>
+    <string name="delivery_from">Départ</string>
+    <string name="delivery_to">Arrivée</string>
+    <string name="delivery_date">Date</string>
+    <string name="delivery_code">Code</string>
+    <string name="delivery_code_label">Code de livraison</string>
+    <string name="delivery_code_instruction">Communiquez ce code au livreur</string>
+
+    <!-- Actions livraisons -->
+    <string name="btn_validate_delivery">Valider la livraison</string>
+    <string name="btn_rate_delivery">Noter la livraison</string>
+    <string name="btn_cancel_delivery">Annuler la livraison</string>
+
+    <!-- Dialog validation livraison -->
+    <string name="dialog_validate_title">Valider la livraison</string>
+    <string name="dialog_validate_message">Entrez le code de validation fourni par le livreur :</string>
+    <string name="dialog_validation_code_hint">Code de validation</string>
+    <string name="btn_validate">Valider</string>
+    <string name="btn_cancel">Annuler</string>
+
+    <!-- Écran des prestations -->
+    <string name="services_title">Mes Prestations</string>
+    <string name="service_status_confirmed">Confirmée</string>
+    <string name="service_status_in_progress">En cours</string>
+    <string name="service_status_completed">Terminée</string>
+    <string name="service_status_cancelled">Annulée</string>
+
+    <!-- Actions prestations -->
+    <string name="btn_edit_service">Modifier</string>
+    <string name="btn_cancel_service">Annuler</string>
+    <string name="btn_rate_service">Noter la prestation</string>
+
+    <!-- Écran de profil -->
+    <string name="profile_title">Profil</string>
+    <string name="profile_member_since">Membre depuis %s</string>
+    <string name="profile_contact_info">Informations de contact</string>
+    <string name="profile_phone">Téléphone</string>
+    <string name="profile_address">Adresse</string>
+    <string name="profile_actions">Actions</string>
+    <string name="profile_statistics">Mes statistiques</string>
+
+    <!-- Actions profil -->
+    <string name="action_edit_profile">Modifier le profil</string>
+    <string name="action_edit_profile_subtitle">Mettre à jour vos informations</string>
+    <string name="action_change_password">Changer le mot de passe</string>
+    <string name="action_change_password_subtitle">Sécuriser votre compte</string>
+    <string name="action_notifications">Notifications</string>
+    <string name="action_notifications_subtitle">Gérer vos préférences</string>
+    <string name="action_help">Aide &amp; Support</string>
+    <string name="action_help_subtitle">Besoin d\'assistance ?</string>
+    <string name="action_logout">Se déconnecter</string>
+
+    <!-- Statistiques -->
+    <string name="stat_deliveries">Livraisons</string>
+    <string name="stat_services">Prestations</string>
+    <string name="stat_average_rating">Note moyenne</string>
+
+    <!-- Dialog édition profil -->
+    <string name="dialog_edit_profile_title">Modifier le profil</string>
+    <string name="field_full_name">Nom complet</string>
+    <string name="field_phone">Téléphone</string>
+    <string name="field_address">Adresse</string>
+    <string name="btn_save">Enregistrer</string>
+
+    <!-- Dialog déconnexion -->
+    <string name="dialog_logout_title">Déconnexion</string>
+    <string name="dialog_logout_message">Êtes-vous sûr de vouloir vous déconnecter ?</string>
+    <string name="btn_logout">Déconnexion</string>
+
+    <!-- Messages d'erreur et de succès -->
+    <string name="error_network">Erreur de connexion réseau</string>
+    <string name="error_generic">Une erreur est survenue</string>
+    <string name="success_delivery_validated">Livraison validée avec succès</string>
+    <string name="success_profile_updated">Profil mis à jour avec succès</string>
+
+    <!-- Placeholders pour les futures fonctionnalités -->
+    <string name="coming_soon">Fonctionnalité bientôt disponible</string>
+    <string name="feature_not_implemented">Cette fonctionnalité sera implémentée par votre collègue</string>
+
+    <!-- Accessibilité -->
+    <string name="cd_back">Retour</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_search">Rechercher</string>
+    <string name="cd_filter">Filtrer</string>
+    <string name="cd_refresh">Actualiser</string>
+
+    <!-- Détails livraison -->
+    <string name="delivery_detail_title">Détail de la livraison</string>
+    <string name="delivery_id_format">Livraison #%s</string>
+    <string name="transport_info_title">Informations de transport</string>
+</resources>
