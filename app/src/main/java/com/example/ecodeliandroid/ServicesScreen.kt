@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/ecodeliandroid/ServicesScreen.kt
 package com.example.ecodeliandroid
 
 import androidx.compose.foundation.background
@@ -14,58 +15,61 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.ecodeliandroid.repository.EcoDeliRepository
+import com.example.ecodeliandroid.network.models.*
 
 @Composable
 fun ServicesScreen(navController: NavController) {
-    // Données mockées
-    val services = remember {
-        listOf(
-            Service(
-                id = "1",
-                title = "Transport personne âgée",
-                status = ServiceStatus.CONFIRMEE,
-                date = "20 Jan 2025 - 14h30",
-                price = "25€",
-                description = "Transport chez le médecin - Dr. Martin, 15 rue de la Paix"
-            ),
-            Service(
-                id = "2",
-                title = "Courses alimentaires",
-                status = ServiceStatus.EN_COURS,
-                date = "16 Jan 2025 - 10h00",
-                price = "18€",
-                description = "Courses au Monoprix - Liste fournie"
-            ),
-            Service(
-                id = "3",
-                title = "Garde d'animaux",
-                status = ServiceStatus.TERMINEE,
-                date = "14 Jan 2025 - 16h00",
-                price = "35€",
-                description = "Garde de Minou (chat) pendant transport"
-            ),
-            Service(
-                id = "4",
-                title = "Achat produits Angleterre",
-                status = ServiceStatus.CONFIRMEE,
-                date = "25 Jan 2025 - 12h00",
-                price = "45€",
-                description = "Jelly anglaise - Marks & Spencer"
-            ),
-            Service(
-                id = "5",
-                title = "Transfert aéroport",
-                status = ServiceStatus.TERMINEE,
-                date = "12 Jan 2025 - 06h30",
-                price = "60€",
-                description = "CDG Terminal 2E vers centre-ville"
+    val context = LocalContext.current
+    val repository = remember { EcoDeliRepository(context) }
+
+    // États pour l'interface
+    var services by remember { mutableStateOf<List<Task>>(emptyList()) }
+    var myApplications by remember { mutableStateOf<List<TaskApplication>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var selectedTab by remember { mutableStateOf(0) }
+
+    // Charger les données au démarrage
+    LaunchedEffect(Unit) {
+        isLoading = true
+        error = null
+
+        try {
+            // Charger les services disponibles (type SERVICE)
+            val tasksResult = repository.getTasks(mapOf("type" to "SERVICE"))
+            tasksResult.fold(
+                onSuccess = { tasks ->
+                    services = tasks.filter { it.type == TaskType.SERVICE }
+                },
+                onFailure = { exception ->
+                    error = "Erreur lors du chargement des services: ${exception.message}"
+                }
             )
-        )
+
+            // Charger mes candidatures pour les services
+            val applicationsResult = repository.getMyApplications()
+            applicationsResult.fold(
+                onSuccess = { applications ->
+                    myApplications = applications.filter {
+                        it.task.type == TaskType.SERVICE
+                    }
+                },
+                onFailure = { exception ->
+                    error = "Erreur lors du chargement des candidatures: ${exception.message}"
+                }
+            )
+        } catch (e: Exception) {
+            error = "Erreur réseau: ${e.message}"
+        } finally {
+            isLoading = false
+        }
     }
 
     Column(
@@ -74,22 +78,109 @@ fun ServicesScreen(navController: NavController) {
             .padding(16.dp)
     ) {
         Text(
-            text = "Mes Prestations",
+            text = "Prestations",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // Onglets
+        TabRow(
+            selectedTabIndex = selectedTab,
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            items(services) { service ->
-                ServiceCard(
-                    service = service,
-                    onClick = {
-                        // Navigation vers détail de prestation si nécessaire
+            Tab(
+                selected = selectedTab == 0,
+                onClick = { selectedTab = 0 },
+                text = { Text("Disponibles") }
+            )
+            Tab(
+                selected = selectedTab == 1,
+                onClick = { selectedTab = 1 },
+                text = { Text("Mes candidatures") }
+            )
+        }
+
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            error != null -> {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Erreur",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = error!!,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Button(
+                            onClick = {
+                                // Relancer le chargement
+                                isLoading = true
+                                error = null
+                            },
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text("Réessayer")
+                        }
                     }
-                )
+                }
+            }
+            else -> {
+                when (selectedTab) {
+                    0 -> {
+                        // Onglet des services disponibles
+                        if (services.isEmpty()) {
+                            EmptyStateMessage("Aucun service disponible pour le moment")
+                        } else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(services) { service ->
+                                    ServiceCard(
+                                        service = service,
+                                        onClick = {
+                                            navController.navigate("service_detail/${service.id}")
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    1 -> {
+                        // Onglet des mes candidatures
+                        if (myApplications.isEmpty()) {
+                            EmptyStateMessage("Vous n'avez postulé à aucun service")
+                        } else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(myApplications) { application ->
+                                    ServiceApplicationCard(
+                                        application = application,
+                                        onClick = {
+                                            navController.navigate("service_detail/${application.task.id}")
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -97,7 +188,7 @@ fun ServicesScreen(navController: NavController) {
 
 @Composable
 fun ServiceCard(
-    service: Service,
+    service: Task,
     onClick: () -> Unit
 ) {
     Card(
@@ -125,17 +216,17 @@ fun ServiceCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = service.date,
+                        text = formatDate(service.createdAt),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    ServiceStatusChip(status = service.status)
+                    TaskStatusChip(status = service.status)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = service.price,
+                        text = formatPrice(service.calculatedPriceInCents),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -145,69 +236,241 @@ fun ServiceCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Description du service
+            Text(
+                text = service.description,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Informations supplémentaires
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = "Description",
-                    tint = MaterialTheme.colorScheme.outline,
+                    imageVector = Icons.Filled.LocationOn,
+                    contentDescription = "Lieu",
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = service.description,
+                    text = service.address.mainText,
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Actions selon le statut
-            when (service.status) {
-                ServiceStatus.CONFIRMEE -> {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { /* Modifier la prestation */ },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Modifier", fontSize = 12.sp)
-                        }
+            // Catégorie et durée si disponibles
+            service.category?.let { category ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Category,
+                        contentDescription = "Catégorie",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = category.name,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
-                        Button(
-                            onClick = { /* Annuler la prestation */ },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(6.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Cancel,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Annuler", fontSize = 12.sp)
-                        }
+            service.estimatedDuration?.let { duration ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Schedule,
+                        contentDescription = "Durée",
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = formatDuration(duration),
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ServiceApplicationCard(
+    application: TaskApplication,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = application.task.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Candidature du ${formatDate(application.createdAt)}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    ApplicationStatusChip(status = application.status)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = formatPrice(application.task.calculatedPriceInCents),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Lieu du service
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.LocationOn,
+                    contentDescription = "Lieu",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = application.task.address.mainText,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Catégorie si disponible
+            application.task.category?.let { category ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Category,
+                        contentDescription = "Catégorie",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = category.name,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Code de validation si disponible
+            if (application.validationCode != null &&
+                (application.status == ApplicationStatus.COMPLETED || application.status == ApplicationStatus.VALIDATED)) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.QrCode,
+                        contentDescription = "Code",
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Code: ${application.validationCode}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+
+            // Actions selon le statut
+            when (application.status) {
+                ApplicationStatus.ACCEPTED -> {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { /* Action pour démarrer le service */ },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Démarrer le service", fontSize = 14.sp)
                     }
                 }
-                ServiceStatus.TERMINEE -> {
+                ApplicationStatus.IN_PROGRESS -> {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { /* Action pour terminer le service */ },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Terminer le service", fontSize = 14.sp)
+                    }
+                }
+                ApplicationStatus.COMPLETED -> {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "⏳ En attente de validation par le client",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                ApplicationStatus.VALIDATED -> {
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedButton(
-                        onClick = { /* Noter la prestation */ },
+                        onClick = { /* Action pour noter */ },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(6.dp)
                     ) {
@@ -217,53 +480,69 @@ fun ServiceCard(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Noter la prestation", fontSize = 14.sp)
+                        Text("Noter le client", fontSize = 14.sp)
                     }
                 }
-                else -> {
-                    // Pas d'actions pour EN_COURS et ANNULEE
-                }
+                else -> { /* Autres statuts */ }
             }
         }
     }
 }
 
 @Composable
-fun ServiceStatusChip(status: ServiceStatus) {
-    val (backgroundColor, textColor, text) = when (status) {
-        ServiceStatus.CONFIRMEE -> Triple(
-            Color(0xFFE8F5E8),
-            Color(0xFF2E7D32),
-            "Confirmée"
-        )
-        ServiceStatus.EN_COURS -> Triple(
-            Color(0xFFE3F2FD),
-            Color(0xFF1976D2),
-            "En cours"
-        )
-        ServiceStatus.TERMINEE -> Triple(
-            Color(0xFFF3E5F5),
-            Color(0xFF7B1FA2),
-            "Terminée"
-        )
-        ServiceStatus.ANNULEE -> Triple(
-            Color(0xFFFFEBEE),
-            Color(0xFFD32F2F),
-            "Annulée"
-        )
-    }
-
+fun EmptyStateMessage(message: String) {
     Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = textColor
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Build,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.outline
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = message,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+// Fonctions utilitaires
+private fun formatDate(dateString: String): String {
+    return try {
+        val instant = java.time.Instant.parse(dateString)
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy")
+            .withZone(java.time.ZoneId.systemDefault())
+        formatter.format(instant)
+    } catch (e: Exception) {
+        dateString.substring(0, 10)
+    }
+}
+
+private fun formatPrice(priceInCents: Int?): String {
+    return if (priceInCents != null) {
+        val euros = priceInCents / 100.0
+        String.format("%.2f€", euros)
+    } else {
+        "Prix à définir"
+    }
+}
+
+private fun formatDuration(durationInMinutes: Int): String {
+    val hours = durationInMinutes / 60
+    val minutes = durationInMinutes % 60
+
+    return when {
+        hours > 0 && minutes > 0 -> "${hours}h ${minutes}min"
+        hours > 0 -> "${hours}h"
+        else -> "${minutes}min"
     }
 }
