@@ -42,6 +42,7 @@ data class Task(
     val fileUrl: String?,
     val completedAt: String?,
     val validatedAt: String?,
+    val estimatedDuration: Int?,
     val createdAt: String,
     val updatedAt: String
 )
@@ -51,6 +52,7 @@ data class TaskApplication(
     val taskId: String,
     val applicantId: String,
     val applicant: User,
+    val task: Task,
     val status: ApplicationStatus,
     val message: String,
     val validationCode: String?,
@@ -117,10 +119,13 @@ data class Shipping(
     val calculatedPriceInCents: Int?
 )
 
-// Enums
+// Enums corrigés selon le backend
 enum class TaskType { SERVICE, SHIPPING }
 enum class TaskStatus { DRAFT, PUBLISHED, IN_PROGRESS, COMPLETED, DONE, CANCELLED }
-enum class ApplicationStatus { PENDING, ACCEPTED, REJECTED, COMPLETED, VALIDATED, IN_PROGRESS }
+
+// ApplicationStatus corrigé selon le backend (SANS IN_PROGRESS)
+enum class ApplicationStatus { PENDING, ACCEPTED, REJECTED, COMPLETED, VALIDATED }
+
 enum class MessageType { TEXT, VALIDATION_CODE, SYSTEM }
 enum class PackageCategory { SMALL, MEDIUM, LARGE }
 enum class Role { BASIC, ADMIN, PARTNER, SUPER_ADMIN, TESTER }

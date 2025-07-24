@@ -202,7 +202,7 @@ fun DeliveryDetailScreen(
                 ) {
                     if (isValidating) {
                         CircularProgressIndicator(
-                            size = 16.dp,
+                            modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp
                         )
                     } else {
@@ -307,7 +307,7 @@ fun DeliveryHeaderCard(delivery: Task) {
             delivery.user.let { user ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Client: ${user.firstName} ${user.lastName}".trim(),
+                    text = "Client: ${user.firstName.orEmpty()} ${user.lastName.orEmpty()}".trim(),
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -446,10 +446,9 @@ fun ActionButton(
     // Déterminer l'action possible selon le statut et les candidatures
     val myApplication = delivery.applications?.find {
         // Ici vous devriez vérifier si c'est la candidature de l'utilisateur connecté
-        // Pour cet exemple, on prend la première candidature acceptée
+        // Pour cet exemple, on prend la première candidature acceptée ou complétée
         it.status == ApplicationStatus.ACCEPTED ||
-                it.status == ApplicationStatus.COMPLETED ||
-                it.status == ApplicationStatus.IN_PROGRESS
+                it.status == ApplicationStatus.COMPLETED
     }
 
     when {
@@ -563,15 +562,5 @@ private fun formatDistance(distanceInMeters: Double): String {
         String.format("%.1f km", distanceInMeters / 1000)
     } else {
         String.format("%.0f m", distanceInMeters)
-    }
-}
-
-private fun formatDuration(durationInMinutes: Double): String {
-    val hours = (durationInMinutes / 60).toInt()
-    val minutes = (durationInMinutes % 60).toInt()
-
-    return when {
-        hours > 0 -> "${hours}h ${minutes}min"
-        else -> "${minutes}min"
     }
 }

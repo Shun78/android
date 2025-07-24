@@ -1,7 +1,6 @@
 // app/src/main/java/com/example/ecodeliandroid/ServicesScreen.kt
 package com.example.ecodeliandroid
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,8 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -145,7 +142,10 @@ fun ServicesScreen(navController: NavController) {
                     0 -> {
                         // Onglet des services disponibles
                         if (services.isEmpty()) {
-                            EmptyStateMessage("Aucun service disponible pour le moment")
+                            EmptyStateMessage(
+                                message = "Aucun service disponible pour le moment",
+                                icon = Icons.Filled.Build
+                            )
                         } else {
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -164,7 +164,10 @@ fun ServicesScreen(navController: NavController) {
                     1 -> {
                         // Onglet des mes candidatures
                         if (myApplications.isEmpty()) {
-                            EmptyStateMessage("Vous n'avez postulé à aucun service")
+                            EmptyStateMessage(
+                                message = "Vous n'avez postulé à aucun service",
+                                icon = Icons.Filled.Build
+                            )
                         } else {
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -424,38 +427,41 @@ fun ServiceApplicationCard(
             // Actions selon le statut
             when (application.status) {
                 ApplicationStatus.ACCEPTED -> {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { /* Action pour démarrer le service */ },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Démarrer le service", fontSize = 14.sp)
-                    }
-                }
-                ApplicationStatus.IN_PROGRESS -> {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = { /* Action pour terminer le service */ },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(6.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Terminer le service", fontSize = 14.sp)
+                    // Si la candidature est acceptée et pas encore démarrée
+                    if (application.startedAt == null) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { /* Action pour démarrer le service */ },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Démarrer le service", fontSize = 14.sp)
+                        }
+                    } else {
+                        // Si déjà démarrée, montrer bouton pour terminer
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { /* Action pour terminer le service */ },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(6.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Terminer le service", fontSize = 14.sp)
+                        }
                     }
                 }
                 ApplicationStatus.COMPLETED -> {
@@ -486,63 +492,5 @@ fun ServiceApplicationCard(
                 else -> { /* Autres statuts */ }
             }
         }
-    }
-}
-
-@Composable
-fun EmptyStateMessage(message: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Build,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.outline
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = message,
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-        }
-    }
-}
-
-// Fonctions utilitaires
-private fun formatDate(dateString: String): String {
-    return try {
-        val instant = java.time.Instant.parse(dateString)
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy")
-            .withZone(java.time.ZoneId.systemDefault())
-        formatter.format(instant)
-    } catch (e: Exception) {
-        dateString.substring(0, 10)
-    }
-}
-
-private fun formatPrice(priceInCents: Int?): String {
-    return if (priceInCents != null) {
-        val euros = priceInCents / 100.0
-        String.format("%.2f€", euros)
-    } else {
-        "Prix à définir"
-    }
-}
-
-private fun formatDuration(durationInMinutes: Int): String {
-    val hours = durationInMinutes / 60
-    val minutes = durationInMinutes % 60
-
-    return when {
-        hours > 0 && minutes > 0 -> "${hours}h ${minutes}min"
-        hours > 0 -> "${hours}h"
-        else -> "${minutes}min"
     }
 }

@@ -170,7 +170,7 @@ fun LoginScreen(navController: NavController) {
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            size = 20.dp,
+                            modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
@@ -231,8 +231,8 @@ private suspend fun loginUser(
 
         // Requête de connexion GraphQL
         val loginMutation = """
-            mutation Login(${'}input: LoginInput!) {
-            login(input: ${'}input) {
+            mutation Login(${'}'}input: LoginInput!) {
+            login(input: ${'}'}input) {
                 token
             }
         }
