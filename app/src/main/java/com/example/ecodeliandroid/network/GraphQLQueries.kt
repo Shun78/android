@@ -3,6 +3,15 @@ package com.example.ecodeliandroid.network
 
 object GraphQLQueries {
 
+    // Mutation pour la connexion
+    const val LOGIN_MUTATION = """
+        mutation Login(${'$'}input: LoginInput!) {
+            login(input: ${'$'}input) {
+                token
+            }
+        }
+    """
+
     // Query pour récupérer les informations utilisateur
     const val GET_ME = """
         query GetMe {

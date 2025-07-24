@@ -213,7 +213,7 @@ fun LoginScreen(navController: NavController) {
     }
 }
 
-// Fonction de connexion
+// Fonction de connexion CORRIGÉE
 private suspend fun loginUser(
     email: String,
     password: String,
@@ -229,15 +229,7 @@ private suspend fun loginUser(
         val apiService = GraphQLClient.createClient(context).create(GraphQLApiService::class.java)
         val gson = Gson()
 
-        // Requête de connexion GraphQL
-        val loginMutation = """
-            mutation Login(${'}'}input: LoginInput!) {
-            login(input: ${'}'}input) {
-                token
-            }
-        }
-        """
-
+        // Utilisation de la requête corrigée depuis GraphQLQueries
         val variables = mapOf(
             "input" to mapOf(
                 "email" to email,
@@ -245,7 +237,7 @@ private suspend fun loginUser(
             )
         )
 
-        val request = GraphQLRequest(loginMutation, variables)
+        val request = GraphQLRequest(GraphQLQueries.LOGIN_MUTATION, variables)
         val response = apiService.executeQuery(request)
 
         if (response.isSuccessful) {
